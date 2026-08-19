@@ -8,6 +8,7 @@ if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 const SECRET_FILE = path.join(DATA_DIR, ".jwt-secret");
 
 function getSecret() {
+  if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
   if (fs.existsSync(SECRET_FILE)) {
     return fs.readFileSync(SECRET_FILE, "utf8").trim();
   }

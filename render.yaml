@@ -7,8 +7,11 @@ services:
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /api/health
-    # Optional: set after the Vercel site is live so WhatsApp share links
-    # point at the Vercel frontend instead of this API host:
-    # envVars:
-    #   - key: PUBLIC_BASE_URL
-    #     value: https://your-site.vercel.app
+    envVars:
+      # Public share links point at the Vercel frontend (not this API host).
+      - key: PUBLIC_BASE_URL
+        value: https://taskboard-two-plum.vercel.app
+      # Secrets are set in the Render dashboard (not committed to this repo):
+      #   DATABASE_URL       -> libsql://taskboard-sahasiddharthi1.aws-us-east-2.turso.io
+      #   TURSO_AUTH_TOKEN   -> token from Turso dashboard
+      #   JWT_SECRET         -> generate with: node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
