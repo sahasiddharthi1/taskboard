@@ -64,11 +64,33 @@
 
       <footer class="composer">
         <div class="composer-box">
-          <input id="task-input" type="text" placeholder="Write down a task for today…" autocomplete="off" />
-          <button id="add-btn" class="send-btn">Add</button>
+          <div class="composer-inputs">
+            <input id="task-input" type="text" placeholder="Write down a task for today…" autocomplete="off" />
+            <div id="task-desc-wrap" class="hidden">
+              <textarea id="task-desc" rows="3" placeholder="Add details… start lines with &quot;-&quot; for bullet points"></textarea>
+            </div>
+          </div>
+          <div class="composer-actions">
+            <button id="desc-toggle" class="btn-icon" title="Add description">📝</button>
+            <button id="add-btn" class="send-btn">Add</button>
+          </div>
         </div>
       </footer>
     </main>
+  </div>
+
+  <div id="edit-modal" class="modal hidden">
+    <div class="modal-card">
+      <h2>Edit task</h2>
+      <label for="edit-title">Title</label>
+      <input id="edit-title" type="text" />
+      <label for="edit-desc">Description <span class="hint">(start lines with "-" for bullets)</span></label>
+      <textarea id="edit-desc" rows="5"></textarea>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="edit-cancel">Cancel</button>
+        <button class="btn btn-primary" id="edit-save">Save</button>
+      </div>
+    </div>
   </div>
 
   <div id="auth" class="auth hidden">

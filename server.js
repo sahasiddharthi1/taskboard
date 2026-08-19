@@ -64,20 +64,20 @@ app.get("/api/tasks", authRequired, (req, res) => {
 });
 
 app.post("/api/tasks", authRequired, (req, res) => {
-  const { title, date } = req.body || {};
+  const { title, date, description } = req.body || {};
   const text = (title || "").toString().trim();
   if (!text) return res.status(400).json({ error: "Task title is required" });
 
   const today = new Date().toISOString().slice(0, 10);
   const taskDate = (date || today).toString().trim() || today;
 
-  const task = db.createTask(req.user.id, text, taskDate);
+  const task = db.createTask(req.user.id, text, taskDate, (description || "").toString());
   res.status(201).json({ task });
 });
 
 app.patch("/api/tasks/:id", authRequired, (req, res) => {
   const id = Number(req.params.id);
-  const { title, status, date } = req.body || {};
+  const { title, status, date, description } = req.body || {};
 
   const existing = db.getTask(id, req.user.id);
   if (!existing) return res.status(404).json({ error: "Task not found" });
@@ -88,6 +88,7 @@ app.patch("/api/tasks/:id", authRequired, (req, res) => {
     if (!text) return res.status(400).json({ error: "Task title cannot be empty" });
     fields.title = text;
   }
+  if (description !== undefined) fields.description = description.toString();
   if (status !== undefined) {
     if (!["pending", "done", "archived"].includes(status)) {
       return res.status(400).json({ error: "Invalid status" });

@@ -32,6 +32,14 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_tasks_user_status ON tasks (user_id, status);
 `);
 
+function ensureColumns() {
+  const cols = db.prepare("PRAGMA table_info(tasks)").all().map((c) => c.name);
+  if (!cols.includes("description")) {
+    db.exec("ALTER TABLE tasks ADD COLUMN description TEXT");
+  }
+}
+ensureColumns();
+
 function addUser(username, passwordHash) {
   const info = db.prepare("INSERT INTO users (username, password_hash) VALUES (?, ?)").run(username, passwordHash);
   return db.prepare("SELECT id, username, share_token, created_at FROM users WHERE id = ?").get(info.lastInsertRowid);
@@ -65,8 +73,8 @@ function listTasks(userId, date, status) {
   return db.prepare(`SELECT * FROM tasks WHERE ${where.join(" AND ")} ORDER BY task_date DESC, id DESC`).all(...params);
 }
 
-function createTask(userId, title, taskDate) {
-  const info = db.prepare("INSERT INTO tasks (user_id, title, task_date) VALUES (?, ?, ?)").run(userId, title, taskDate);
+function createTask(userId, title, taskDate, description) {
+  const info = db.prepare("INSERT INTO tasks (user_id, title, task_date, description) VALUES (?, ?, ?, ?)").run(userId, title, taskDate, description || null);
   return db.prepare("SELECT * FROM tasks WHERE id = ?").get(info.lastInsertRowid);
 }
 
@@ -75,7 +83,7 @@ function getTask(id, userId) {
 }
 
 function updateTask(id, userId, fields) {
-  const allowed = ["title", "status", "task_date"];
+  const allowed = ["title", "status", "task_date", "description"];
   const sets = [];
   const params = [];
   for (const key of allowed) {

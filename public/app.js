@@ -46,6 +46,29 @@ function api(path, opts = {}) {
   });
 }
 
+function escHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function renderDescription(description) {
+  if (!description || !description.trim()) return "";
+  const lines = description.split(/\r?\n/).map((l) => l.trimEnd());
+  let html = '<div class="task-desc">';
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (/^[-*•]\s+/.test(line)) {
+      html += `<div class="bullet">• ${escHtml(line.replace(/^[-*•]\s+/, ""))}</div>`;
+    } else if (/^\d+[.)]\s+/.test(line)) {
+      html += `<div class="bullet">${escHtml(line)}</div>`;
+    } else {
+      html += `<div class="para">${escHtml(line)}</div>`;
+    }
+  }
+  html += "</div>";
+  return html;
+}
+
 /* ---------------- Auth UI ---------------- */
 const authEl = $("#auth");
 const appEl = $("#app");
@@ -196,6 +219,7 @@ function taskNode(task) {
     <div class="check" title="Toggle done">✓</div>
     <div class="task-space">
       <div class="task-title"></div>
+      <div class="task-desc-holder"></div>
       <div class="task-meta">
         <span class="status-pill ${task.status}">${task.status}</span>
         <span>${time || "no time"}</span>
@@ -205,6 +229,7 @@ function taskNode(task) {
     <button class="btn-icon danger" data-act="delete" title="Delete forever">🗑️</button>
   `;
   node.querySelector(".task-title").textContent = task.title;
+  node.querySelector(".task-desc-holder").innerHTML = renderDescription(task.description);
   node.querySelector(".check").addEventListener("click", () => toggleTask(task));
   node.querySelector('[data-act="edit"]').addEventListener("click", () => editTask(task));
   node.querySelector('[data-act="delete"]').addEventListener("click", () => deleteTask(task));
@@ -220,18 +245,29 @@ function render() {
 /* ---------------- Actions ---------------- */
 $("#add-btn").addEventListener("click", () => submitTask());
 $("#task-input").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") submitTask();
+  if (e.key === "Enter" && !e.shiftKey) submitTask();
+});
+
+$("#desc-toggle").addEventListener("click", () => {
+  const wrap = $("#task-desc-wrap");
+  wrap.classList.toggle("hidden");
+  if (!wrap.classList.contains("hidden")) $("#task-desc").focus();
 });
 
 async function submitTask() {
   const input = $("#task-input");
   const title = input.value.trim();
   if (!title) return;
-  const btn = $("#add-btn");
-  btn.disabled = true;
+  const button = $("#add-btn");
+  button.disabled = true;
   try {
-    await api("/api/tasks", { method: "POST", body: JSON.stringify({ title, date: todayStr() }) });
+    await api("/api/tasks", {
+      method: "POST",
+      body: JSON.stringify({ title, date: todayStr(), description: $("#task-desc").value }),
+    });
     input.value = "";
+    $("#task-desc").value = "";
+    $("#task-desc-wrap").classList.add("hidden");
     await loadTasks();
     // jump to today's view
     state.dayFilter = todayStr();
@@ -241,7 +277,7 @@ async function submitTask() {
   } catch (err) {
     toast(err.message);
   } finally {
-    btn.disabled = false;
+    button.disabled = false;
     input.focus();
   }
 }
@@ -252,18 +288,49 @@ async function toggleTask(task) {
   await loadTasks();
 }
 
-async function editTask(task) {
-  const title = prompt("Edit task", task.title);
-  if (!title || title.trim() === task.title) return;
+let editingTaskId = null;
+
+function openEditModal(task) {
+  editingTaskId = task.id;
+  $("#edit-title").value = task.title;
+  $("#edit-desc").value = task.description || "";
+  $("#edit-modal").classList.remove("hidden");
+  $("#edit-title").focus();
+}
+
+function closeEditModal() {
+  $("#edit-modal").classList.add("hidden");
+  editingTaskId = null;
+}
+
+$("#edit-cancel").addEventListener("click", closeEditModal);
+$("#edit-modal").addEventListener("click", (e) => {
+  if (e.target === e.currentTarget) closeEditModal();
+});
+$("#edit-save").addEventListener("click", saveEdit);
+["#edit-title", "#edit-desc"].forEach((sel) => {
+  $(sel).addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeEditModal();
+  });
+});
+
+async function saveEdit() {
+  const title = $("#edit-title").value.trim();
+  if (!title) return;
   try {
-    await api(`/api/tasks/${task.id}`, {
+    await api(`/api/tasks/${editingTaskId}`, {
       method: "PATCH",
-      body: JSON.stringify({ title: title.trim() }),
+      body: JSON.stringify({ title, description: $("#edit-desc").value }),
     });
+    closeEditModal();
     await loadTasks();
   } catch (err) {
     toast(err.message);
   }
+}
+
+async function editTask(task) {
+  openEditModal(task);
 }
 
 async function deleteTask(task) {

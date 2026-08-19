@@ -13,6 +13,29 @@ function fmtDate(iso) {
   return target.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 }
 
+function escHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function renderDescription(description) {
+  if (!description || !description.trim()) return "";
+  const lines = description.split(/\r?\n/).map((l) => l.trimEnd());
+  let html = '<div class="task-desc">';
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (/^[-*•]\s+/.test(line)) {
+      html += `<div class="bullet">• ${escHtml(line.replace(/^[-*•]\s+/, ""))}</div>`;
+    } else if (/^\d+[.)]\s+/.test(line)) {
+      html += `<div class="bullet">${escHtml(line)}</div>`;
+    } else {
+      html += `<div class="para">${escHtml(line)}</div>`;
+    }
+  }
+  html += "</div>";
+  return html;
+}
+
 function render() {
   const board = $("#share-board");
   let vis = tasks;
@@ -48,9 +71,11 @@ function render() {
         <div class="check">${t.status === "done" ? "✓" : ""}</div>
         <div class="task-space">
           <div class="task-title"></div>
+          <div class="task-desc-holder"></div>
           <div class="task-meta"><span class="status-pill ${t.status}">${t.status}</span></div>
         </div>`;
       node.querySelector(".task-title").textContent = t.title;
+      node.querySelector(".task-desc-holder").innerHTML = renderDescription(t.description);
       wrap.appendChild(node);
     }
     board.appendChild(wrap);
