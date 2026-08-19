@@ -1,5 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://taskboard-8t6w.onrender.com/api/$1" }
+    { "source": "/api/(.*)", "destination": "https://taskboard-8t6w.onrender.com/api/$1" },
+    { "source": "/share/(.*)", "destination": "/share.html" }
   ]
 }

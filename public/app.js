@@ -283,19 +283,32 @@ document.querySelectorAll(".nav-item").forEach((n) =>
 );
 
 /* ---------------- Share / WhatsApp ---------------- */
+function localizeShareUrl(url) {
+  try {
+    const u = new URL(url);
+    if (u.origin !== location.origin) {
+      u.origin = location.origin;
+    }
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
 $("#whatsapp-btn").addEventListener("click", async () => {
   const btn = $("#whatsapp-btn");
   btn.disabled = true;
   try {
     const { url } = await api("/api/share", { method: "POST" });
+    const shareUrl = localizeShareUrl(url);
     const done = state.tasks.filter((t) => t.status === "done").length;
     const total = state.tasks.length;
     const msg =
       `*My tasks today* (${state.username})\n\n` +
       `${done}/${total} done\n` +
-      `Track my progress here: ${url}`;
+      `Track my progress here: ${shareUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
-    localStorage.setItem("tb_share_url", url);
+    localStorage.setItem("tb_share_url", shareUrl);
     toast("Opening WhatsApp…");
   } catch (err) {
     toast(err.message);
@@ -310,8 +323,9 @@ $("#copy-btn").addEventListener("click", async () => {
     if (!url) {
       const res = await api("/api/share", { method: "POST" });
       url = res.url;
-      localStorage.setItem("tb_share_url", url);
     }
+    url = localizeShareUrl(url);
+    localStorage.setItem("tb_share_url", url);
     await navigator.clipboard.writeText(url);
     toast("Link copied!");
   } catch (err) {
