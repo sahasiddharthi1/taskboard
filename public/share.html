@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Taskboard — Shared Board</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div id="share-app" class="share-wrap hidden">
+    <div class="share-head">
+      <div class="avatar" id="share-avatar">#</div>
+      <div>
+        <div class="share-title" id="share-title">Shared task board</div>
+        <div class="share-sub" id="share-sub"></div>
+      </div>
+    </div>
+
+    <div class="share-filter">
+      <button class="chip active" data-f="all">All</button>
+      <button class="chip" data-f="pending">Pending</button>
+      <button class="chip" data-f="done">Done</button>
+    </div>
+
+    <div id="share-board">
+      <div class="empty">Loading…</div>
+    </div>
+  </div>
+
+  <div id="share-error" class="auth hidden">
+    <div class="auth-card">
+      <div class="auth-logo">#</div>
+      <h1>Link not found</h1>
+      <p class="auth-sub">This share link is invalid. Ask the owner for a fresh one.</p>
+    </div>
+  </div>
+
+  <script src="/share.js"></script>
+</body>
+</html>

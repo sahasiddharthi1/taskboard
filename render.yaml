@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: taskboard-api
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    # Optional: set after the Vercel site is live so WhatsApp share links
+    # point at the Vercel frontend instead of this API host:
+    # envVars:
+    #   - key: PUBLIC_BASE_URL
+    #     value: https://your-site.vercel.app
