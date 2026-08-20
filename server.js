@@ -22,7 +22,7 @@ function publicUser(user) {
   return { id: user.id, username: user.username, shareToken: user.share_token || null, createdAt: user.created_at };
 }
 
-app.get("/api/health", (_req, res) => res.json({ ok: true, time: new Date().toISOString() }));
+app.get("/api/health", (_req, res) => res.json({ ok: true, version: 3, time: new Date().toISOString() }));
 
 // ---------- Auth ----------
 app.post("/api/auth/register", async (req, res) => {
